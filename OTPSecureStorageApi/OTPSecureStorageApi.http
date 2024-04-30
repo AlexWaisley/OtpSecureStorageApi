@@ -1,6 +1,0 @@
-@OTPSecureStorageApi_HostAddress = http://localhost:5259
-
-GET {{OTPSecureStorageApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

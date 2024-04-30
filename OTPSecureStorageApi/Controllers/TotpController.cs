@@ -1,75 +1,46 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using OTPSecureStorageApi.Entity;
+using OTPSecureStorageApi.Mappers;
 
-namespace OTPSecureStorageApi.Controllers
+namespace OTPSecureStorageApi.Controllers;
+
+[Route("totp")]
+[ApiController]
+public sealed class TotpController(ILogger<TotpController> logger) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class TotpController : ControllerBase
+    [HttpGet("{id:guid}")]
+    public Results<Ok<TotpDto>, NotFound> GenerateTotp(Guid id)
     {
-        [HttpGet("{key}")]
-        public Task<ActionResult<string>> GetCode(string key)
-        {
-            try
-            {
-                var totp = Data.ReadFromRegistry(key);
-                if(totp == null)
-                {
-                    return Task.FromResult<ActionResult<string>>(NotFound("Key not found"));
-                }
-                return Task.FromResult<ActionResult<string>>(Ok(Totp.GetCode(totp.Key,totp.DigitsCount)));
-            }
-            catch (Exception e)
-            {
-                return Task.FromResult<ActionResult<string>>(NotFound(e.Message));
-            }
-        }
+        var totp = DataBase.Read(id);
+        if (totp is not null) return TypedResults.Ok(totp.MapToDto());
 
-        [HttpGet]
-        public Task<ActionResult<List<TotpForm>>> GetAllCodes()
-        {
-            try
-            {
-                var totp = Data.ReadAllFromRegistry();
-                totp.ForEach(x=>x.Key = Totp.GetCode(x.Key, x.DigitsCount));
-                return Task.FromResult<ActionResult<List<TotpForm>>>(Ok(totp));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                return Task.FromResult<ActionResult<List<TotpForm>>>(NotFound(e.Message));
-            }
-        }
+        logger.LogError("Key not found");
+        return TypedResults.NotFound();
+    }
 
-        [HttpPost]
-        public Task<ActionResult<List<TotpForm>>> AddTotp(TotpForm totp)
-        {
-            try
-            {
-                Data.SaveToRegistry(totp.Name, totp.Key, totp.DigitsCount);
-                var values = Data.ReadAllFromRegistry();
-                return Task.FromResult<ActionResult<List<TotpForm>>>(Ok(values));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                return Task.FromResult<ActionResult<List<TotpForm>>>(NotFound(e.Message));
-            }
-        }
-        
-        [HttpDelete("{key}")]
-        public Task<ActionResult<List<TotpForm>>> DeleteTotp(string key)
-        {
-            try
-            {
-                Data.DeleteFromRegistry(key);
-                var values = Data.ReadAllFromRegistry();
-                return Task.FromResult<ActionResult<List<TotpForm>>>(Ok(values));
-            }
-            catch (Exception e)
-            {
-                return Task.FromResult<ActionResult<List<TotpForm>>>(NotFound(e.Message));
-            }
-        }
+
+    [HttpGet]
+    public Ok<TotpDto[]> GetAllCodes()
+    {
+        var totp = DataBase.ReadAll().Select(x => x.MapToDto()).ToArray();
+
+        return TypedResults.Ok(totp);
+    }
+
+    [HttpPost]
+    public Ok<TotpDto> AddTotp(TotpCreateRequest totp)
+    {
+            var totpEntity = totp.MapToEntity();
+            DataBase.Save(totpEntity);
+            var totpDto = totpEntity.MapToDto();
+            return TypedResults.Ok(totpDto);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public Ok DeleteTotp(Guid id)
+    {
+            DataBase.Delete(id);
+            return TypedResults.Ok();
     }
 }

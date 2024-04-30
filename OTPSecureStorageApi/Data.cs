@@ -106,15 +106,22 @@ public static class Data
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             using var subKey = Registry.CurrentUser.OpenSubKey(KeyName, true);
+            
             if (subKey == null)
             {
                 throw new Exception("No keys found in registry");
             }
-            if (!subKey.GetValueNames().Contains(key))
+            
+            using var isdeletedKey = subKey.OpenSubKey("IsDeleted", true);
+            if (isdeletedKey == null)
+            {
+                throw new Exception("Registry is corrupted");
+            }
+            if (!isdeletedKey.GetValueNames().Contains(key))
             {
                 throw new Exception("Key not found");
             }
-            subKey.SetValue(key + "IsDeleted", true);
+            isdeletedKey.SetValue(key, 1, RegistryValueKind.DWord);
         }
         else
         {

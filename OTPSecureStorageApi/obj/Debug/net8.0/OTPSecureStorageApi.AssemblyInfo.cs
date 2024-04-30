@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OTPSecureStorageApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+07e1fb28655e7f552e9af42d54bf12db8fb8b869")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+058b23cd9baf93599a47b9515a7aab464238c192")]
 [assembly: System.Reflection.AssemblyProductAttribute("OTPSecureStorageApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OTPSecureStorageApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

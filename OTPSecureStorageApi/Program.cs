@@ -1,3 +1,19 @@
+using System.Runtime.InteropServices;
+
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    var path = Path.GetDirectoryName(System.Environment.ProcessPath) + "\\" + Path.GetFileName(Environment.ProcessPath);
+    
+    using var registry = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+    var value = registry?.GetValue("OTPSecureStorageApi");
+    
+    if (value == null || value.ToString() != path)
+        registry?.SetValue("OTPSecureStorageApi", path);
+    
+}
+const string originSite = "https://otpstore.pp.ua";
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -5,18 +21,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    options.AddPolicy("OtpStorePolicy",
         corsPolicyBuilder =>
         {
-            corsPolicyBuilder.AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
+            corsPolicyBuilder.WithOrigins(originSite);
         });
 });
 
 var app = builder.Build();
 
-app.UseCors("AllowAll");
+app.UseCors("OtpStorePolicy");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
